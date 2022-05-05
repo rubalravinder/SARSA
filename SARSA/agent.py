@@ -148,4 +148,3 @@ class SARSAAgent(Agent):
         QSA_prime = self.Q[x_new, y_new, action_prime]
         QSA = self.Q[x_old, y_old, action]
         self.Q[x_old, y_old, action] += self.alpha * (reward + self.gamma * QSA_prime - QSA)
-

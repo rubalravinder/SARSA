@@ -2,9 +2,9 @@
 Module to generate a maze.
 """
 from typing import Tuple
-
 import numpy as np
 
+from .ghost import Ghost
 
 class Maze:
     """
@@ -14,7 +14,7 @@ class Maze:
     # list of possible actions, corresponding to left, right, up, down
     actions = [0, 1, 2, 3]
 
-    def __init__(self, shape: Tuple[int, int], exits: int, seed: int = None):
+    def __init__(self, shape: Tuple[int, int], nb_exits: int, nb_ghosts: int, seed: int = None):
         """
         Constructor.
 
@@ -22,13 +22,17 @@ class Maze:
         ----------
         shape : Tuple[int,int]
             Shape of the maze.
-        exits : int
+        nb_exits : int
             Number of exits.
+        nb_ghost : int
+            Number of ghosts.
         seed : int
             Seed for the random number generator.
         """
         self.shape = shape
-        self.exits = exits
+        self.nb_exits = nb_exits
+        self.nb_ghosts = nb_ghosts
+        self.ghosts = []
         self.rng = np.random.default_rng(seed=seed)
         self.maze = None
         self.generate_maze()
@@ -39,9 +43,11 @@ class Maze:
         Generate a maze.
         """
         self.maze = np.zeros(self.shape, dtype=np.int)
-        for _ in range(self.exits):
+        for _ in range(self.nb_exits):
             x, y = self.generate_exit()
             self.maze[x, y] = 1
+        for _ in range(self.nb_ghosts):
+            self.ghosts.append(self.generate_ghost())
 
     def generate_exit(self) -> Tuple[int, int]:
         """
@@ -58,6 +64,23 @@ class Maze:
         while self.maze[x, y] == 1:
             x, y = self.generate_random_coord()
         return x, y
+    
+    def generate_ghost(self) -> Tuple[int, int]:
+        """
+        Generate initial position of a ghost.
+
+        Returns
+        -------
+        x : int
+            X coordinate.
+        y : int
+            Y coordinate.
+        """
+        x, y = self.generate_random_coord()
+        while self.maze[x, y] == 1:
+            x, y = self.generate_random_coord()
+        return Ghost(x, y, 0)
+
 
     def generate_start_position(self) -> Tuple[int, int]:
         """
@@ -174,8 +197,16 @@ class Maze:
         x, y = self.current_position
         x, y = self.move(x, y, action)
         self.current_position = x, y
+
+        self.update_ghosts()
+        
         done = self.maze[x, y] == 1
         return done
+
+    def update_ghosts(self):
+        # actions des ghosts
+        for g in self.ghosts:
+            g.x, g.y = self.move(g.x, g.y, g.act(maze=self))
 
     def get_exits(self) -> list:
         """
@@ -187,3 +218,5 @@ class Maze:
             List of exits.
         """
         return np.where(self.maze == 1)
+
+

@@ -49,13 +49,24 @@ def plot_maze(maze: Maze):
         edgecolors="blue",
     )
 
+    # add ghosts
+    for g in maze.ghosts:
+        plt.scatter(
+            x= g.x + 0.5,
+            y= g.y + 0.5,
+            s=130,
+            c="red",
+            marker="+",
+            edgecolors="yellow",
+        )
+
     plt.show()
 
 
 def plot_cumsum(game):
     """Plot the cumulative sum of rewards."""
     plt.figure(1, figsize=(12, 10))
-    plt.plot(np.cumsum(game.rewards))
+    plt.plot(np.cumsum(game.rewards), "+-")
     plt.title("Cumulative sum of rewards")
     plt.grid()
     plt.show()
@@ -64,7 +75,7 @@ def plot_cumsum(game):
 def plot_cumav(game):
     """Plot the cumulative average of rewards."""
     plt.figure(1, figsize=(12, 10))
-    plt.plot(np.cumsum(game.rewards) / np.arange(1, len(game.rewards) + 1))
+    plt.plot(np.cumsum(game.rewards) / np.arange(1, len(game.rewards) + 1), "+-")
     plt.title("Cumulative average of rewards")
     plt.grid()
     plt.show()
