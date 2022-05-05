@@ -9,7 +9,7 @@ class ReplayBuffer:
     """classe de replay buffer"""
     def __init__(self):
         self.lst_expces = []
-        self.batch_size = 50
+        self.batch_size = 64
     
     def add_expce(self, st, at, rt, st_next, done):
         """

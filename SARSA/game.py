@@ -8,10 +8,10 @@ import numpy as np
 from IPython.display import clear_output
 from tqdm import tqdm
 
-from .agent import Agent
-from .maze import Maze
-from .vizualiser import plot_maze
-from .replay_buffer import ReplayBuffer
+from agent import Agent
+from maze import Maze
+from vizualiser import plot_maze
+from replay_buffer import ReplayBuffer
 
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -40,13 +40,13 @@ class Game:
         self.max_steps = max_steps
         self.rewards = []
         self.replay_buffer = ReplayBuffer()
-        self.min_len_buffer = 1024
+        self.min_len_buffer = 50
         self.gamma = 0.9
-        self.model = keras.Sequential(
-                                [layers.Dense(64, activation='relu'),
+        self.model = keras.Sequential([layers.Input(2),
+                                layers.Dense(64, activation='relu'),
                                 layers.Dense(38, activation='relu'),
                                 layers.Dense(4, activation='softmax')])
-        self.model.compile(loss='rmse', optimizer='adam', metrics=['rmse'])
+        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
 
 
 
@@ -81,7 +81,9 @@ class Game:
         maze_done = False
         agent_done = False
         ghost_done = False
+
         while not (maze_done or agent_done or ghost_done):
+            
             # exécuter l'action a
             maze_done = self.maze.step(action)
 
@@ -101,7 +103,7 @@ class Game:
             # Q[s, a] := Q[s, a] + α[r + γQ(s', a') - Q(s, a)]
 
             self.replay_buffer.add_expce(state, action, reward, state_prime, maze_done or agent_done or ghost_done)
-            self.agent.learn(reward, state, action, state_prime, action_prime)
+            #self.agent.learn(reward, state, action, state_prime, action_prime)
 
             # s ← s'
             # a ← a'
@@ -114,22 +116,22 @@ class Game:
                 plot_maze(self.maze)
                 sleep(1)
 
-        if len(self.replay_buffer) > self.min_len_buffer: # si on a assez de expces est suffisante
+        if len(self.replay_buffer) > self.min_len_buffer: # si on a assez de expces est suffisante, on échantillone
             lst_state, lst_action, lst_reward, lst_state_prime, lst_done = self.replay_buffer.get_batch()
         
-        lst_q     = []
-        for state, action, reward, state_prime, done in zip(lst_state, lst_action, lst_reward, lst_state_prime, lst_done):
-            
-            lst_q.append(self.model(state))
+            lst_q     = []
+            for state, action, reward, state_prime, done in zip(lst_state, lst_action, lst_reward, lst_state_prime, lst_done):
+                
+                lst_q.append(self.model(np.asarray([state])).numpy())
 
-            if done :
-                lst_q[-1][action] = reward
-            else:
-                expected_reward = self.model(state_prime)
-                idx_max = np.argmax(expected_reward)
-                lst_q[-1][action] = reward + expected_reward[idx_max] * self.gamma
+                if done :
+                    lst_q[-1][0,action] = reward
+                else:
+                    expected_reward = self.model(np.asarray([state_prime])).numpy()
+                    idx_max = np.argmax(expected_reward[0])
+                    lst_q[-1][0,action] = reward + expected_reward[0,idx_max] * self.gamma
 
-        self.model.fit(x=lst_state, y=lst_q)
+            self.model.fit(x=np.asarray(lst_state), y=np.concatenate(lst_q))
         
         return reward
 

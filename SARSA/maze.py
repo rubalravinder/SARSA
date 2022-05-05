@@ -4,7 +4,7 @@ Module to generate a maze.
 from typing import Tuple
 import numpy as np
 
-from .ghost import Ghost
+from ghost import Ghost
 
 class Maze:
     """

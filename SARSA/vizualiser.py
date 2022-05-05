@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .maze import Maze
+from maze import Maze
 
 
 def plot():

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from .maze import Maze
+from maze import Maze
 
 start_Q = 0
 start_Q_for_exits = 0
